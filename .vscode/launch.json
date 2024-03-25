@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/sarojit/Documents/PlatformIO/Projects/MAX17048G-T10-Fuel-Gauge-Sensor",
+      "program": "/Users/sarojit/Documents/PlatformIO/Projects/MAX17048G-T10-Fuel-Gauge-Sensor/build/Debug/outDebug"
+    }
+  ]
+}
