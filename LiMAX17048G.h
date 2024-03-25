@@ -72,3 +72,5 @@ class MAX17048G {
         uint8_t getStatus();
 
 }
+
+#endif
