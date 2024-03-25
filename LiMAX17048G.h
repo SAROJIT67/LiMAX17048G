@@ -12,12 +12,10 @@
  * Filename: LiMAX17048G.h
  */
 
-#ifndef _MAX17048G_H
-#define _MAX17048G_H
+#include "Arduino.h"
 
-#include <Arduino.h>
-#include <Wire.h>
-
+#ifndef _MAX17048_H
+#define _MAX17048_H
 
 // Funtion ISR for the ALERT Interrupt
 typedef void (*func)();
@@ -71,6 +69,6 @@ class MAX17048G {
         func _f;
         uint8_t getStatus();
 
-}
+};
 
 #endif

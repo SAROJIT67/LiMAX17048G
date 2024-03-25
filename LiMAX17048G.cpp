@@ -14,21 +14,7 @@
 
 
 #include "LiMAX17048G.h"
-
-
-// Initializes variables and the Wire library
-MAX17048G::MAX17048G(gaugeType ic) : _ic(ic), _f(NULL) 
-{ 
-	Wire.begin(); 
-}
-
-// Initializes varaibles and the Wire library
-// Assigns ISR f to interrupt intr (for Alert Interrupt)
-MAX17048G::MAX17048G(gaugeType ic, uint8_t intr, func f) : _ic(ic), _f(f)
-{
-    attachInterrupt(intr, f, FALLING);
-    Wire.begin();
-}
+#include "Wire.h"
 
 // Returns a measurement of the voltage of the connected 1S / 2S LiIon battery
 // 0-5V range w/ 1.25mV resolution for the MAX17048
