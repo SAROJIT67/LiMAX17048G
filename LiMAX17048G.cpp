@@ -76,13 +76,11 @@ int MAX17048G::getVersion()
 byte MAX17048G::getCompensation()
 {
 	byte MSB = 0;
-	byte LSB = 0;
 	Wire.beginTransmission(MAX1704X_ADDR);
 	Wire.write(MAX1704X_RCOMP_ADDR);
 	Wire.endTransmission();
 	Wire.requestFrom(MAX1704X_ADDR, 2);
 	MSB =  Wire.read();
-	LSB =  Wire.read();
 	return MSB;
 }
 
