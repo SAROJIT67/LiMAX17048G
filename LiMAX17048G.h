@@ -46,8 +46,6 @@ class MAX17048G {
 
     public:
 
-        MAX17048G(gaugeType ic);
-        MAX17048G(gaugeType ic, uint8_t intr, func f);
         double getCellVolt();
         double getSOC();
         uint16_t getVersion();
