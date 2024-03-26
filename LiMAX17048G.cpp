@@ -14,6 +14,7 @@
 
 
 #include "LiMAX17048G.h"
+#include "Wire.h"
 
 
 // Initializes variables and the Wire library
@@ -33,46 +34,56 @@ MAX17048G::MAX17048G(gaugeType ic, uint8_t intr, func f) : _ic(ic), _f(f)
 // Returns a measurement of the voltage of the connected 1S / 2S LiIon battery
 // 0-5V range w/ 1.25mV resolution for the MAX17048
 // 0-10V range w/ 2.5mV resolution for the MAX17049
-double MAX17048G::getCellVolt()
+double MAX17048G::getVoltage()
 {
+	MAX17048G::reset();
+	MAX17048G::quickStart();
     Wire.beginTransmission(MAX1704X_ADDR);
 	Wire.write(MAX1704X_VCELL_ADDR);
-	Wire.endTransmission(true);
-	Wire.requestFrom(MAX1704X_ADDR, (uint8_t)2);
+	Wire.endTransmission();
+	Wire.requestFrom(MAX1704X_ADDR, 2);
 	return ( (Wire.read() << 4) + (Wire.read() >> 4) ) * 0.00125 * _ic;
-    delay(1000);   // this delay is importent, otherwise it did not work properly.
 }
 
 // Returns the relative state of charge of the connected LiIon Polymer battery
 // as a percentage of the full capacity w/ resolution 1/256%
 double MAX17048G::getSOC()
 {
+	MAX17048G::reset();
+	MAX17048G::quickStart();
     Wire.beginTransmission(MAX1704X_ADDR);
 	Wire.write(MAX1704X_SOC_ADDR);
-	Wire.endTransmission(true);
-	Wire.requestFrom(MAX1704X_ADDR, (uint8_t)2);
+	Wire.endTransmission();
+	Wire.requestFrom(MAX1704X_ADDR, 2);
 	return Wire.read() + (double) Wire.read() / 256;
-    delay(1000);   // this delay is importent, otherwise it did not work properly.
 }
 
 // Returns the production version of the IC
-uint16_t MAX17048G::getVersion() 
+int MAX17048G::getVersion() 
 {
+	byte MSB = 0;
+	byte LSB = 0;
 	Wire.beginTransmission(MAX1704X_ADDR);
 	Wire.write(MAX1704X_VERSION_ADDR);
-	Wire.endTransmission(true);
-	Wire.requestFrom(MAX1704X_ADDR, (uint8_t)2);
-	return ( Wire.read() << 8 ) + Wire.read();
+	Wire.endTransmission();
+	Wire.requestFrom(MAX1704X_ADDR, 2);
+	MSB =  Wire.read();
+	LSB =  Wire.read();
+	return ( MSB << 8 ) + LSB;
 }
 
 // Return the value used to optimize IC performance to different operating conditions
-uint8_t MAX17048G::getCompensateValue() 
+byte MAX17048G::getCompensation()
 {
+	byte MSB = 0;
+	byte LSB = 0;
 	Wire.beginTransmission(MAX1704X_ADDR);
 	Wire.write(MAX1704X_RCOMP_ADDR);
-	Wire.endTransmission(true);
-	Wire.requestFrom(MAX1704X_ADDR, (uint8_t)1);
-	return Wire.read();
+	Wire.endTransmission();
+	Wire.requestFrom(MAX1704X_ADDR, 2);
+	MSB =  Wire.read();
+	LSB =  Wire.read();
+	return MSB;
 }
 
 // Return the alert threshold as a percentage, below an alert interrupt is generated
@@ -87,40 +98,42 @@ uint8_t MAX17048G::getStatus()
 	Wire.beginTransmission(MAX1704X_ADDR);
 	Wire.write(MAX1704X_ATHRD_ADDR);
 	Wire.endTransmission(true);
-	Wire.requestFrom(MAX1704X_ADDR, (uint8_t)1);
+	Wire.requestFrom(MAX1704X_ADDR, 1);
 	return Wire.read();
 }
 
 // Sets a value to the MSB of the CONFIG register used 
 // to optimizethe  IC performance to different operating conditions
-uint8_t MAX17048G::setCompensation(uint8_t compensation)
+uint8_t MAX17048G::setCompensation(uint8_t comp)
 {	
 	uint8_t status = getStatus();
+	
 	Wire.beginTransmission(MAX1704X_ADDR);
 	Wire.write(MAX1704X_CONFIG_ADDR);
-	Wire.write(compensation);
+	Wire.write(comp);
 	Wire.write(status);
 	return Wire.endTransmission();
 }
 
 // Sets the alert threshold below which an alert interrupt is generated
 // The acceptable range is 1-32%. Default threshold is 4%
-uint8_t MAX17048G::setAlertThreshold(uint8_t threshold)
+uint8_t MAX17048G::setAlertThreshold(uint8_t thrd)
 {
-	if ( threshold > 32 ) threshold = 32;
-	else if ( threshold < 1 ) threshold = 1;
-	threshold = ( ~threshold + 1 ) & 0x1F;
+	if ( thrd > 32 ) thrd = 32;
+	else if ( thrd < 1 ) thrd = 1;
+	thrd = ( ~thrd + 1 ) & 0x1F;
 	
-	uint8_t compensation, sleepBit;
+	uint8_t comp, sleepBit;
 	Wire.beginTransmission(MAX1704X_ADDR);
 	Wire.write(MAX1704X_CONFIG_ADDR);
 	Wire.endTransmission(false);
-	Wire.requestFrom(MAX1704X_ADDR, (uint8_t)2);
-	compensation = Wire.read();
+	Wire.requestFrom(MAX1704X_ADDR, 2);
+	comp = Wire.read();
 	sleepBit = Wire.read() & 0x80;
+	
 	Wire.beginTransmission(MAX1704X_ADDR);
 	Wire.write(MAX1704X_CONFIG_ADDR);
-	Wire.write(compensation);
+	Wire.write(comp);
 	Wire.write(sleepBit | thrd);
 	return Wire.endTransmission();
 }
@@ -163,7 +176,6 @@ uint8_t MAX17048G::wake()
 	Wire.write(compensation);
 	Wire.write(0x7F & threshold);
 	return Wire.endTransmission();
-    delay(1000);   // this delay is importent, otherwise it did not work properly.
 }
 
 // whether the MAX1704X is in sleep mode
